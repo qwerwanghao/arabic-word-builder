@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arabic Word Builder | Fun Preschool Spelling Game</title>
+  <meta name="description" content="A playful Arabic spelling game for preschool children. Drag and drop letters to build words!">
+  <!-- Google Fonts for friendly, rounded preschool-appropriate Arabic & English typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&family=Cairo:wght@400;600;700;900&family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Game Container -->
+  <div id="game-container" class="game-container">
+    
+    <!-- ================= START SCREEN ================= -->
+    <section id="screen-start" class="game-screen active">
+      <!-- Floating Controls Bar (Only on Start Screen for clean layout) -->
+      <div class="top-controls-bar">
+        <button id="btn-lang" class="btn-icon btn-lang-toggle" aria-label="Toggle Language" title="Switch Language">
+          <span class="icon">🌐</span>
+        </button>
+        <button id="btn-sound" class="btn-icon btn-sound-toggle" aria-label="Toggle Sound" title="Toggle Sound">
+          <span class="icon">🔊</span>
+        </button>
+      </div>
+
+      <div class="clouds-bg"></div>
+      <div class="start-content">
+        <!-- Floating Sun / Mascot Accent -->
+        <div class="sun-glow"></div>
+        
+        <h1 class="game-title">
+          <span class="title-main" data-i18n="gameTitleMain">Arabic Word Builder</span>
+          <span class="title-sub" data-i18n="gameTitleSub">Letters & Words</span>
+        </h1>
+
+        <!-- Mascot container with playful idle animation -->
+        <div class="mascot-start-container">
+          <img src="assets/mascot.png" alt="Happy Camel Mascot" class="mascot-img mascot-bounce">
+          <div class="speech-bubble" data-i18n="mascotStart">Hi friends! Let's build some fun words together! 👋🐫</div>
+        </div>
+
+        <!-- Play Button -->
+        <div class="action-container">
+          <button id="btn-play" class="btn-bubble btn-play-game">
+            <span class="btn-text" data-i18n="playBtn">PLAY NOW! 🎮</span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="decorations">
+        <div class="deco-star star-1">⭐</div>
+        <div class="deco-star star-2">⭐</div>
+        <div class="deco-balloon balloon-1">🎈</div>
+      </div>
+    </section>
+
+    <!-- ================= GAMEPLAY SCREEN ================= -->
+    <section id="screen-gameplay" class="game-screen">
+      <!-- Gameplay Header -->
+      <header class="game-header">
+        <div class="header-right">
+          <button id="btn-back" class="btn-icon btn-back-home" aria-label="Back to Menu" data-i18n-title="backBtnTitle">
+            <span class="icon">↩️</span>
+          </button>
+        </div>
+
+        <div class="header-center">
+          <!-- Level Progress indicators (Step circles) -->
+          <div class="level-progress-tracker" id="level-progress-tracker">
+            <!-- Dynamically generated in JS -->
+          </div>
+        </div>
+
+        <div class="header-left">
+          <!-- Score Widget -->
+          <div class="score-display">
+            <span class="score-star">⭐</span>
+            <span class="score-label" data-i18n="scoreLabel">Score: </span>
+            <span id="score-value" class="score-value">0</span>
+          </div>
+          <!-- Integrated Controls Bar (Solves overlap bug perfectly) -->
+          <button id="btn-lang-game" class="btn-icon btn-lang-toggle" aria-label="Toggle Language" title="Switch Language">
+            <span class="icon">🌐</span>
+          </button>
+          <button id="btn-sound-game" class="btn-icon btn-sound-toggle" aria-label="Toggle Sound" title="Toggle Sound">
+            <span class="icon">🔊</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Play Zone -->
+      <div class="play-zone">
+        
+        <!-- Word Illustration Container -->
+        <div class="word-card-container">
+          <div class="bubble-cloud-frame">
+            <img id="word-image" src="" alt="Word Illustration" class="word-illustration">
+          </div>
+          
+          <div class="pronounce-word-bar">
+            <button id="btn-pronounce" class="btn-pulse-sound" title="Listen to word">
+              <span class="speaker-icon">🔊</span>
+              <span class="speaker-text" data-i18n="pronounceBtn">Listen to Word</span>
+            </button>
+            <!-- Faded guiding spelling helper -->
+            <div id="word-pronounce-spelling" class="word-guide-spelling"></div>
+          </div>
+        </div>
+
+        <!-- Word Building Slots (RTL: right to left) -->
+        <div class="word-slots-outer">
+          <div id="word-slots" class="word-slots-container">
+            <!-- Dynamically generated in JS -->
+          </div>
+        </div>
+
+        <!-- Letter Deck (Shuffled letter cards) -->
+        <div class="letter-deck-outer">
+          <div class="deck-title" data-i18n="deckTitle">Drag the letters to their correct spots: ✨</div>
+          <div id="letter-rack" class="letter-rack-container">
+            <!-- Dynamically generated in JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Level Success Popup (Modal Overlay) -->
+      <div id="modal-success" class="modal-overlay">
+        <div class="modal-content text-bounce">
+          <div class="confetti-particles"></div>
+          <div class="stars-reward-row">
+            <span class="star-reward star-gray" id="reward-star-1">⭐</span>
+            <span class="star-reward star-gray" id="reward-star-2">⭐</span>
+            <span class="star-reward star-gray" id="reward-star-3">⭐</span>
+          </div>
+
+          <img src="assets/mascot.png" alt="Happy Camel" class="mascot-reward mascot-jump">
+          
+          <h2 class="reward-title" id="reward-title">EXCELLENT! 🌟</h2>
+          <p class="reward-subtitle" id="reward-subtitle">You built a wonderful word!</p>
+
+          <div class="score-bonus-display" id="bonus-points-label">
+            Bonus Points: <span id="bonus-points" class="bonus-value">+50</span>
+          </div>
+
+          <button id="btn-next-level" class="btn-bubble btn-next">
+            <span class="btn-text" data-i18n="nextLevelBtn">NEXT LEVEL ➔</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= VICTORY SCREEN ================= -->
+    <section id="screen-victory" class="game-screen">
+      <div class="clouds-bg"></div>
+      <div class="victory-content">
+        <!-- Big shining reward circle -->
+        <div class="victory-medal-container">
+          <div class="victory-halo"></div>
+          <div class="victory-trophy">🏆</div>
+        </div>
+
+        <h1 class="victory-title" data-i18n="victoryTitle">CONGRATULATIONS, HERO! 🎉</h1>
+        <p class="victory-subtitle" data-i18n="victorySubtitle">You have completed all the words successfully!</p>
+
+        <!-- Mascot celebratory view -->
+        <div class="mascot-victory-container">
+          <img src="assets/mascot.png" alt="Celebration Mascot" class="mascot-img mascot-dance">
+          <div class="speech-bubble speech-victory" data-i18n="victoryMascot">You are a Word Building Star! I'm so proud of you! 🌟🐫</div>
+        </div>
+
+        <!-- MOCKED BACKEND STATISTICS -->
+        <div class="victory-stats-card">
+          <h3 class="stats-card-title" data-i18n="statsTitle">🎖️ HONOR ROLL (Player Stats)</h3>
+          
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-icon">⭐</span>
+              <span class="stat-label" data-i18n="statTotalScore">Total Score</span>
+              <span id="final-score" class="stat-value">150</span>
+            </div>
+
+            <div class="stat-item">
+              <span class="stat-icon">🎯</span>
+              <span class="stat-label" data-i18n="statAccuracy">Spelling Accuracy</span>
+              <span id="final-accuracy" class="stat-value">100%</span>
+            </div>
+
+            <div class="stat-item">
+              <span class="stat-icon">👑</span>
+              <span class="stat-label" data-i18n="statReward">Reward Unlocked</span>
+              <span class="stat-value badge-glow" data-i18n="statBadgeName">Letter Explorer 🌟</span>
+            </div>
+            
+            <div class="stat-item">
+              <span class="stat-icon">⚡</span>
+              <span class="stat-label" data-i18n="statSync">Sync Status</span>
+              <span class="stat-value status-online" data-i18n="statSyncVal">✓ Saved Locally</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-container">
+          <button id="btn-restart" class="btn-bubble btn-replay">
+            <span class="btn-text" data-i18n="replayBtn">PLAY AGAIN! 🔄</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Game Javascript Logic -->
+  <script src="js/game.js"></script>
+</body>
+</html>
