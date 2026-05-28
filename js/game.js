@@ -380,6 +380,12 @@ function setupUIEventListeners() {
       state.language = state.language === 'en' ? 'ar' : 'en';
       applyLanguage();
       playSound('pop');
+      
+      // If we are currently inside the gameplay screen, re-render the spelling board instantly!
+      const gameplayScreen = document.getElementById("screen-gameplay");
+      if (gameplayScreen && gameplayScreen.classList.contains("active")) {
+        startLevel(state.currentLevelIndex);
+      }
     });
   });
 
@@ -474,19 +480,34 @@ function startLevel(levelIndex) {
   imgEl.src = levelData.image;
   imgEl.alt = levelData.english;
   
+  // Determine target spelling letters and guides dynamically based on current language
+  let lettersToUse = [];
+  let spellingGuideText = "";
+  
+  if (state.language === 'en') {
+    // English mode: spells RABBIT (Left-to-Right layout)
+    const upperEnglish = levelData.english.toUpperCase();
+    lettersToUse = upperEnglish.split('');
+    spellingGuideText = lettersToUse.join(' - ');
+  } else {
+    // Arabic mode: spells أَرْنَبْ (Right-to-Left layout)
+    lettersToUse = levelData.letters;
+    spellingGuideText = levelData.spellingGuide;
+  }
+  
   // Set guides
-  document.getElementById("word-pronounce-spelling").innerText = levelData.spellingGuide;
+  document.getElementById("word-pronounce-spelling").innerText = spellingGuideText;
   
   // Speak the word automatically at start of level to welcome the child (Bilingual)
   setTimeout(() => {
     speakCurrentWord();
   }, 600);
 
-  // Generate Slots (Flow RTL: Right to Left, Arabic conventions are preserved!)
+  // Generate Slots (Flow handles RTL/LTR dynamically based on container dir!)
   const slotsContainer = document.getElementById("word-slots");
   slotsContainer.innerHTML = "";
   
-  levelData.letters.forEach((char, idx) => {
+  lettersToUse.forEach((char, idx) => {
     const slot = document.createElement("div");
     slot.className = "letter-slot";
     slot.dataset.letter = char;
@@ -505,13 +526,13 @@ function startLevel(levelIndex) {
   letterRack.innerHTML = "";
   
   // Shuffle cards
-  let shuffledLetters = [...levelData.letters]
+  let shuffledLetters = [...lettersToUse]
     .map((char, index) => ({ char, originalIndex: index }))
     .sort(() => Math.random() - 0.5);
   
   // Verify it shuffled
-  let checkMatch = shuffledLetters.every((item, i) => item.char === levelData.letters[i]);
-  if (checkMatch && levelData.letters.length > 2) {
+  let checkMatch = shuffledLetters.every((item, i) => item.char === lettersToUse[i]);
+  if (checkMatch && lettersToUse.length > 2) {
     shuffledLetters.reverse();
   }
 

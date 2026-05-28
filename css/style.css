@@ -564,7 +564,6 @@ body {
 
 .word-slots-container {
   display: flex;
-  flex-row-reverse: row-reverse; /* RTL slot sequencing so right side is the start */
   justify-content: center;
   gap: 16px;
   width: 100%;
