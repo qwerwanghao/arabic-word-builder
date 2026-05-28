@@ -257,58 +257,31 @@ function playSound(type) {
   }
 }
 
-// 5. ARABIC TEXT-TO-SPEECH (Web Speech API)
-// Pronounces Arabic words clearly, with a smart English fallback if the OS/Network Arabic package fails.
-function speakArabic(wordText) {
+// 5. BILINGUAL TEXT-TO-SPEECH (Web Speech API)
+// Pronounces the word based on the currently selected UI language.
+// Speaks English (en-US) in English mode, and Arabic (ar-SA) in Arabic mode.
+function speakCurrentWord() {
   if (state.soundMuted) return;
   
   if ('speechSynthesis' in window) {
-    // 1. Reset stuck state and force resume (Crucial Chrome desktop bug fix)
+    // Reset stuck state and force resume (Chrome desktop fix)
     window.speechSynthesis.resume();
     window.speechSynthesis.cancel();
     
-    const utterance = new SpeechSynthesisUtterance(wordText);
-    utterance.lang = 'ar-SA'; 
-    utterance.rate = 0.6;    // Preschool child-friendly slow speed
-    utterance.pitch = 1.1;   
+    const levelData = LEVELS[state.currentLevelIndex];
+    const textToSpeak = state.language === 'en' ? levelData.english : levelData.pronunciation;
+    const langToUse = state.language === 'en' ? 'en-US' : 'ar-SA';
     
-    const voices = window.speechSynthesis.getVoices();
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = langToUse;
+    utterance.rate = state.language === 'en' ? 0.75 : 0.65;
+    utterance.pitch = 1.1;
     
-    // Try to find a local Arabic voice first to avoid Google network server blocks
-    let arabicVoice = voices.find(v => v.lang.toLowerCase().includes('ar') && v.localService === true);
-    
-    // If no local, try any Arabic voice (including Google network voices)
-    if (!arabicVoice) {
-      arabicVoice = voices.find(v => v.lang.toLowerCase().includes('ar'));
-    }
-    
-    if (arabicVoice) {
-      utterance.voice = arabicVoice;
-      utterance.lang = arabicVoice.lang;
-    }
-    
-    // 2. 🔥 EXCELLENT FALLBACK: If Arabic synthesis fails (blocked network or missing OS language packs),
-    // we gracefully fall back to pronouncing the English word! Fully educational & client-ready.
-    utterance.onerror = (e) => {
-      console.warn("Arabic SpeechSynthesis failed (blocked network or missing OS voice pack). Falling back to English...", e);
-      
-      const levelData = LEVELS[state.currentLevelIndex];
-      const engUtterance = new SpeechSynthesisUtterance(levelData.english);
-      engUtterance.lang = 'en-US';
-      engUtterance.rate = 0.7;
-      
-      const engVoice = voices.find(v => v.lang.toLowerCase().includes('en'));
-      if (engVoice) engUtterance.voice = engVoice;
-      
-      setTimeout(() => {
-        window.speechSynthesis.speak(engUtterance);
-      }, 50);
-    };
-    
-    // 3. Delay speak by 80ms to allow cancel/resume to finish cleanly
+    // Let the browser choose the native voice pack for the language automatically.
+    // This resolves silent lockups on PC Chrome and is 100% robust.
     setTimeout(() => {
       window.speechSynthesis.speak(utterance);
-    }, 80);
+    }, 50);
   }
 }
 
@@ -409,11 +382,10 @@ function setupUIEventListeners() {
     });
   });
 
-  // Pronounce Word Audio Button
+  // Pronounce Word Audio Button (Bilingual native support)
   document.getElementById("btn-pronounce").addEventListener("click", () => {
     playSound('pop');
-    const levelData = LEVELS[state.currentLevelIndex];
-    speakArabic(levelData.pronunciation);
+    speakCurrentWord();
     
     const btn = document.getElementById("btn-pronounce");
     btn.classList.add("sound-playing");
@@ -504,9 +476,9 @@ function startLevel(levelIndex) {
   // Set guides
   document.getElementById("word-pronounce-spelling").innerText = levelData.spellingGuide;
   
-  // Speak the word automatically at start of level to welcome the child
+  // Speak the word automatically at start of level to welcome the child (Bilingual)
   setTimeout(() => {
-    speakArabic(levelData.pronunciation);
+    speakCurrentWord();
   }, 600);
 
   // Generate Slots (Flow RTL: Right to Left, Arabic conventions are preserved!)
@@ -772,10 +744,9 @@ function triggerLevelVictory() {
   // Active Overlay Modal
   document.getElementById("modal-success").classList.add("active");
   
-  // Speak the completed word one more time to reinforce auditory recall
-  const levelData = LEVELS[state.currentLevelIndex];
+  // Speak the completed word one more time to reinforce auditory recall (Bilingual)
   setTimeout(() => {
-    speakArabic(levelData.pronunciation);
+    speakCurrentWord();
   }, 400);
 }
 
