@@ -258,31 +258,57 @@ function playSound(type) {
 }
 
 // 5. ARABIC TEXT-TO-SPEECH (Web Speech API)
-// Pronounces Arabic words clearly with a kid-friendly pace.
+// Pronounces Arabic words clearly, with a smart English fallback if the OS/Network Arabic package fails.
 function speakArabic(wordText) {
   if (state.soundMuted) return;
   
   if ('speechSynthesis' in window) {
-    // 1. Cancel active pronunciations first to avoid queuing lags
+    // 1. Reset stuck state and force resume (Crucial Chrome desktop bug fix)
+    window.speechSynthesis.resume();
     window.speechSynthesis.cancel();
     
     const utterance = new SpeechSynthesisUtterance(wordText);
-    utterance.lang = 'ar-SA'; // Native Saudi Arabia voice
-    utterance.rate = 0.65;    // Slower speed for preschool children
-    utterance.pitch = 1.2;    // Slightly higher pitch for child-friendly tone
+    utterance.lang = 'ar-SA'; 
+    utterance.rate = 0.6;    // Preschool child-friendly slow speed
+    utterance.pitch = 1.1;   
     
-    // Attempt to locate a high-quality Arabic voice
     const voices = window.speechSynthesis.getVoices();
-    const arabicVoice = voices.find(voice => voice.lang.toLowerCase().includes('ar'));
+    
+    // Try to find a local Arabic voice first to avoid Google network server blocks
+    let arabicVoice = voices.find(v => v.lang.toLowerCase().includes('ar') && v.localService === true);
+    
+    // If no local, try any Arabic voice (including Google network voices)
+    if (!arabicVoice) {
+      arabicVoice = voices.find(v => v.lang.toLowerCase().includes('ar'));
+    }
+    
     if (arabicVoice) {
       utterance.voice = arabicVoice;
       utterance.lang = arabicVoice.lang;
     }
     
-    // 2. Delay speak by 50ms to allow cancel to complete asynchronously (Fixes PC Chrome silence bug!)
+    // 2. 🔥 EXCELLENT FALLBACK: If Arabic synthesis fails (blocked network or missing OS language packs),
+    // we gracefully fall back to pronouncing the English word! Fully educational & client-ready.
+    utterance.onerror = (e) => {
+      console.warn("Arabic SpeechSynthesis failed (blocked network or missing OS voice pack). Falling back to English...", e);
+      
+      const levelData = LEVELS[state.currentLevelIndex];
+      const engUtterance = new SpeechSynthesisUtterance(levelData.english);
+      engUtterance.lang = 'en-US';
+      engUtterance.rate = 0.7;
+      
+      const engVoice = voices.find(v => v.lang.toLowerCase().includes('en'));
+      if (engVoice) engUtterance.voice = engVoice;
+      
+      setTimeout(() => {
+        window.speechSynthesis.speak(engUtterance);
+      }, 50);
+    };
+    
+    // 3. Delay speak by 80ms to allow cancel/resume to finish cleanly
     setTimeout(() => {
       window.speechSynthesis.speak(utterance);
-    }, 50);
+    }, 80);
   }
 }
 
