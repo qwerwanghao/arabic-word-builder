@@ -450,7 +450,7 @@ body {
   font-size: 20px;
 }
 
-/* Main Play Zone Layout */
+/* Main Play Zone Layout - Enabled with premium overflow scroll and iOS momentum physics */
 .play-zone {
   flex: 1;
   display: flex;
@@ -460,6 +460,16 @@ body {
   width: 100%;
   margin-top: 10px;
   z-index: 2;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 24px;
+}
+
+/* Prevent layout squeezing on short mobile screens to guarantee crisp large preschool card sizes */
+.word-card-container, 
+.word-slots-outer, 
+.letter-deck-outer {
+  flex-shrink: 0;
 }
 
 /* Word Card Illustration frame */
