@@ -263,6 +263,7 @@ function speakArabic(wordText) {
   if (state.soundMuted) return;
   
   if ('speechSynthesis' in window) {
+    // 1. Cancel active pronunciations first to avoid queuing lags
     window.speechSynthesis.cancel();
     
     const utterance = new SpeechSynthesisUtterance(wordText);
@@ -270,13 +271,18 @@ function speakArabic(wordText) {
     utterance.rate = 0.65;    // Slower speed for preschool children
     utterance.pitch = 1.2;    // Slightly higher pitch for child-friendly tone
     
+    // Attempt to locate a high-quality Arabic voice
     const voices = window.speechSynthesis.getVoices();
-    const arabicVoice = voices.find(voice => voice.lang.includes('ar'));
+    const arabicVoice = voices.find(voice => voice.lang.toLowerCase().includes('ar'));
     if (arabicVoice) {
       utterance.voice = arabicVoice;
+      utterance.lang = arabicVoice.lang;
     }
     
-    window.speechSynthesis.speak(utterance);
+    // 2. Delay speak by 50ms to allow cancel to complete asynchronously (Fixes PC Chrome silence bug!)
+    setTimeout(() => {
+      window.speechSynthesis.speak(utterance);
+    }, 50);
   }
 }
 
